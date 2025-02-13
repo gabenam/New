@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Valentine Game for Jessie Li</title>
+
+  <style>
+    /* Global reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #ffe6e6; /* base background */
+      overflow-x: hidden; /* prevent horizontal scroll if "No" button moves */
+      color: #333;
+      transition: background-color 0.5s ease; /* optional smoother transitions */
+    }
+
+    /* "Disco" background color animation */
+    @keyframes discoBG {
+      0%   { background-color: #ffe6e6; } /* light pink */
+      25%  { background-color: #ffd9f3; } /* pinkish-white */
+      50%  { background-color: #ffcce0; } /* pastel pink */
+      75%  { background-color: #fff0f0; } /* near white */
+      100% { background-color: #ffe6e6; } /* back to start */
+    }
+
+    /* When body has the "disco" class, it cycles through background colors */
+    body.disco {
+      animation: discoBG 2s linear infinite;
+    }
+
+    /* Floating hearts in the background */
+    .floating-heart {
+      position: absolute;
+      bottom: -10%;
+      font-size: 2rem;
+      color: #ff4d4d;
+      opacity: 0.8;
+      animation: floatUp 10s linear infinite;
+      pointer-events: none; /* so they don't block clicks */
+    }
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) rotate(0deg);
+      }
+      100% {
+        transform: translateY(-120vh) rotate(360deg);
+      }
+    }
+
+    /* Container for content */
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 100vh;
+      padding: 1rem;
+      position: relative;
+      transition: transform 0.3s; /* ensure smoother transitions */
+    }
+
+    /* "dance" wiggle animation */
+    @keyframes wiggle {
+      0%   { transform: rotate(-2deg); }
+      50%  { transform: rotate(2deg); }
+      100% { transform: rotate(-2deg); }
+    }
+
+    /* When container has the "dance" class, it wiggles infinitely */
+    .container.dance {
+      animation: wiggle 0.2s ease-in-out infinite;
+    }
+
+    h1 {
+      font-size: 2.4rem;
+      margin-bottom: 1rem;
+      margin-top: 1rem;
+    }
+
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Buttons */
+    button {
+      background-color: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+      margin: 0.5rem;
+    }
+    button:hover {
+      background-color: #ff1a1a;
+      transform: translateY(-2px);
+    }
+    #noBtn {
+      position: relative;
+    }
+
+    /* Steps container */
+    #gameSteps {
+      margin-top: 2rem;
+    }
+
+    /* Hidden by default - we reveal steps as we go */
+    .step {
+      display: none;
+      margin-bottom: 2rem;
+    }
+    .step.active {
+      display: block;
+    }
+
+    .step h2 {
+      font-size: 1.8rem;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Answers container */
+    .answer-options {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    /* Popup (for final messages or confirmations) */
+    #popupOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      display: none; /* hidden by default */
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    #popup {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 80%;
+    }
+    #popup h2 {
+      margin-bottom: 1rem;
+    }
+    #popup button {
+      margin-top: 1rem;
+      background-color: #ff4d4d;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 25px;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    /* Image Gallery */
+    #gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .gallery-img {
+      width: 200px;
+      height: 150px;
+      object-fit: cover;
+      border: 2px solid #ff4d4d;
+      border-radius: 8px;
+    }
+
+    /* Media queries for responsiveness */
+    @media (max-width: 600px) {
+      button {
+        padding: 0.8rem 1.2rem;
+        font-size: 0.9rem;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      .step h2 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Hearts -->
+  <div class="floating-heart" style="left: 10%; animation-duration: 9s;">❤️</div>
+  <div class="floating-heart" style="left: 30%; animation-duration: 11s;">❤️</div>
+  <div class="floating-heart" style="left: 50%; animation-duration: 8s;">❤️</div>
+  <div class="floating-heart" style="left: 70%; animation-duration: 12s;">❤️</div>
+  <div class="floating-heart" style="left: 90%; animation-duration: 10s;">❤️</div>
+
+  <!-- Main container -->
+  <div class="container" id="mainContainer">
+    <h1>Jessie Li, Will You Be My Valentine?</h1>
+    <p>Welcome to our little Valentine’s game. I have a few questions for you!</p>
+
+    <!-- Buttons for main Valentine question -->
+    <div>
+      <button id="yesBtn">Yes</button>
+      <button id="noBtn">No</button>
+    </div>
+
+    <!-- Game steps (questions) -->
+    <div id="gameSteps">
+      <!-- Step 2: Are you free on Feb 21? -->
+      <div id="step2" class="step">
+        <h2>Are You Free on February 21?</h2>
+        <p>I’d love to spend some time together on that day!</p>
+        <div class="answer-options">
+          <button id="freeYes">Yes, I’m free!</button>
+          <button id="freeNo">No, sorry!</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Cuisine choice -->
+      <div id="step3" class="step">
+        <h2>Which cuisine are you craving?</h2>
+        <p>Italian, Korean, or Chinese?</p>
+        <div class="answer-options">
+          <button class="cuisineBtn" data-choice="Italian">Italian</button>
+          <button class="cuisineBtn" data-choice="Korean">Korean</button>
+          <button class="cuisineBtn" data-choice="Chinese">Chinese</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Show chosen date/cuisine -->
+      <div id="step4" class="step">
+        <h2 id="summaryTitle"></h2>
+        <p id="summaryText"></p>
+        <button id="finalClose">OK</button>
+      </div>
+    </div>
+
+    <!-- Image Gallery Section (Replace with your own images) -->
+    <div id="gallery">
+      <!-- Example placeholders; replace src with your own images -->
+      <img class="gallery-img" src="https://via.placeholder.com/200x150?text=Pic+1" alt="Placeholder Image 1">
+      <img class="gallery-img" src="https://via.placeholder.com/200x150?text=Pic+2" alt="Placeholder Image 2">
+      <img class="gallery-img" src="https://via.placeholder.com/200x150?text=Pic+3" alt="Placeholder Image 3">
+    </div>
+  </div>
+
+  <!-- Popup Overlay -->
+  <div id="popupOverlay">
+    <div id="popup">
+      <h2 id="popupText"></h2>
+      <button id="popupCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // Main Valentine question
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+
+    // Steps
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+    const step4 = document.getElementById('step4');
+
+    // Step 2 question
+    const freeYes = document.getElementById('freeYes');
+    const freeNo = document.getElementById('freeNo');
+
+    // Step 3 question
+    const cuisineButtons = document.querySelectorAll('.cuisineBtn');
+
+    // Step 4 summary
+    const summaryTitle = document.getElementById('summaryTitle');
+    const summaryText = document.getElementById('summaryText');
+    const finalClose = document.getElementById('finalClose');
+
+    // Popup
+    const popupOverlay = document.getElementById('popupOverlay');
+    const popupText = document.getElementById('popupText');
+    const popupCloseBtn = document.getElementById('popupCloseBtn');
+
+    // Container & body
+    const mainContainer = document.getElementById('mainContainer');
+    const body = document.body;
+
+    // For storing answers
+    let isFeb21Free = null;
+    let chosenCuisine = null;
+
+    // Show popup
+    function showPopup(message) {
+      popupText.textContent = message;
+      popupOverlay.style.display = 'flex';
+    }
+
+    // Hide popup
+    function hidePopup() {
+      popupOverlay.style.display = 'none';
+    }
+
+    popupCloseBtn.addEventListener('click', hidePopup);
+
+    // Make the site "dance"
+    function startDancing() {
+      // Add a "disco" background animation to the <body>
+      body.classList.add('disco');
+      // Add a wiggle animation to the container
+      mainContainer.classList.add('dance');
+    }
+
+    // ============== MAIN "WILL YOU BE MY VALENTINE?" ==============
+    yesBtn.addEventListener('click', () => {
+      // Instead of confetti, let's make the site dance
+      startDancing();
+
+      // Show a fun popup
+      showPopup("Woohoo! I'm so happy you said YES! Let's dance!");
+
+      // After closing the popup, reveal Step 2
+      popupCloseBtn.onclick = () => {
+        hidePopup();
+        step2.classList.add('active');
+      };
+    });
+
+    // "No" button runs away on mouseover
+    noBtn.addEventListener('mouseover', () => {
+      const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
+      const randomY = Math.floor(Math.random() * (window.innerHeight - 50));
+      noBtn.style.position = 'absolute';
+      noBtn.style.left = randomX + 'px';
+      noBtn.style.top = randomY + 'px';
+    });
+
+    // ============== STEP 2: "Are you free on Feb 21?" ==============
+    freeYes.addEventListener('click', () => {
+      isFeb21Free = true;
+      step2.classList.remove('active');
+      step3.classList.add('active');
+    });
+    freeNo.addEventListener('click', () => {
+      isFeb21Free = false;
+      step2.classList.remove('active');
+      step3.classList.add('active');
+    });
+
+    // ============== STEP 3: "Which cuisine do you want?" ==============
+    cuisineButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        chosenCuisine = btn.dataset.choice; // e.g. "Italian" / "Korean" / "Chinese"
+        step3.classList.remove('active');
+        step4.classList.add('active');
+
+        // Fill in the summary text
+        summaryTitle.textContent = "Thanks for answering!";
+        let dateAnswer = isFeb21Free 
+          ? "You're free on February 21! Yay!"
+          : "You're not free on February 21, but that's okay—we'll find another date!";
+        let cuisineAnswer = `You chose ${chosenCuisine} cuisine. Yum!`;
+        summaryText.textContent = dateAnswer + " " + cuisineAnswer;
+      });
+    });
+
+    // ============== STEP 4: Final close ==============
+    finalClose.addEventListener('click', () => {
+      // Show a final message
+      showPopup("Thanks for playing! Enjoy the dance and let's celebrate soon ♥");
+      // Hide step 4 after final popup
+      step4.classList.remove('active');
+
+      popupCloseBtn.onclick = () => {
+        hidePopup();
+      };
+    });
+  </script>
+</body>
+</html>
